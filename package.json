@@ -1,0 +1,14 @@
+{
+  "name": "dsh-quant-data-mcp",
+  "version": "0.1.0",
+  "description": "Zero-dependency MCP stdio server template with an out-of-the-box A-share (Chinese stock) data toolkit. Key-free, NDJSON protocol, drop-in dsh bundle.",
+  "type": "module",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

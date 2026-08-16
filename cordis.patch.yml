@@ -1,0 +1,39 @@
+# dsh cordis patch for the `dsh-quant-data-mcp` bundle.
+#
+# ALL filesystem paths are ENVIRONMENT VARIABLES, resolved by cordis' YAML
+# `!!js` tag at load time — so this file is portable, with NO hardcoded paths.
+# Set these before launching dsh (see env.example.cmd / README):
+#   QUANT_MCP_NODE    absolute path to the Node executable to spawn
+#   QUANT_MCP_SERVER  absolute path to lib/quant-mcp-server.mjs in this bundle
+#   QUANT_MCP_CWD     working directory for the server child process
+#
+# Patch layer is OVERRIDE-ONLY: use `- insert:` with a full entry.
+# The entry MUST carry `name: '@deepseek-ai/dsh-mcp-client'` AND wrap the
+# server config under `config:` — otherwise dsh boot crashes with
+# "Cannot read properties of undefined (reading 'startsWith')".
+- insert:
+    - id: mcp-quant-data
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: quant_data
+        transport: stdio
+        command: !!js process.env.QUANT_MCP_NODE
+        # IMPORTANT: the list element MUST be UNQUOTED so cordis resolves the
+        # !!js tag at load time. A single-quoted flow element ('!!js ...')
+        # becomes a literal YAML string and the spawn fails with ENOENT,
+        # silently killing every reconnect attempt (10 strikes → tools gone).
+        args:
+          - !!js process.env.QUANT_MCP_SERVER
+        cwd: !!js process.env.QUANT_MCP_CWD
+        env:
+          NODE_OPTIONS: ''
+          # forward the optional log path to the server child so it can log
+          # (the dsh-mcp-client spawns the child with only this `env`, so any
+          # var the server needs must be listed here)
+          QUANT_MCP_LOG: !!js process.env.QUANT_MCP_LOG
+        failOnStartupError: false
+        reconnect:
+          enabled: true
+          initialDelayMs: 500
+          maxDelayMs: 30000
+          maxAttempts: 10
