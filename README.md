@@ -26,6 +26,14 @@ dsh-quant-data-mcp/
 
 ---
 
+## 兼容性（Compatibility）
+
+- 支持的 DSH 版本：v0.1.0-rc.6 及以上（使用 `dsh.bundle` manifest + `cordis.patch.yml` 机制）。
+- 运行时：Node.js >= 18（仅用内置模块，无需 `npm install`）。
+- 最后验证日期：2026-08-16。
+
+---
+
 ## 安装
 
 ### 方式 A：一键脚本（Windows / PowerShell）
@@ -188,6 +196,22 @@ args:
 
 - dsh 升级会清空 `node_modules` 补丁：bundle 目录、其 `package.json` 的 bundle 声明、web profile 的 `bundles` 列表都会被重置。升级后**重跑 `setup.ps1`** 即可恢复。
 - `QUANT_MCP_*` 环境变量位于启动脚本 / shell 层，不受 dsh 升级影响（`env.example.cmd` 拷进你的启动脚本即可）。
+
+---
+
+## 卸载（Uninstall）
+
+本插件为纯本地 stdio 进程，不写入系统目录、不注册系统服务，删除即彻底移除。
+
+```powershell
+# 1) 编辑 <DshHome>\profiles\web\package.json，从 dsh.profile.bundles 数组删除 "dsh-quant-data-mcp"
+# 2) 删除 bundle 目录
+Remove-Item -Recurse -Force "<DshHome>\profiles\node_modules\dsh-quant-data-mcp"
+# 3) （可选）清理启动脚本里的 QUANT_MCP_* 环境变量，然后重启 dsh
+```
+
+- 环境变量（`QUANT_MCP_*`）只存在于你自己的 `env.example.cmd` / shell 中，按需清理即可，不随 bundle 删除而自动清除。
+- 不残留任何系统级痕迹。
 
 ---
 
