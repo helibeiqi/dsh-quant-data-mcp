@@ -1,8 +1,15 @@
 # dsh cordis patch for the `dsh-quant-data-mcp` bundle.
 #
-# ALL filesystem paths are ENVIRONMENT VARIABLES, resolved by cordis' YAML
-# `!!js` tag at load time — so this file is portable, with NO hardcoded paths.
-# Set these before launching dsh (see env.example.cmd / README):
+# Filesystem paths are resolved by cordis' YAML `!!js` tag at load time.
+# Each path reads an OPTIONAL env override (QUANT_MCP_NODE / QUANT_MCP_SERVER /
+# QUANT_MCP_CWD / QUANT_MCP_LOG) and falls back to a value derived from
+# `baseUrl` (the bundle's own location, injected into the loader context) or
+# `process.execPath` (the Node running dsh). This makes the bundle a true
+# drop-in: dsh boots and the MCP server spawns correctly WITH OR WITHOUT these
+# env vars being set — no more `args:[null]` boot crash.
+#
+# To override (e.g. for portability / a different Node build), set the vars
+# before launching dsh (see env.example.cmd / README):
 #   QUANT_MCP_NODE    absolute path to the Node executable to spawn
 #   QUANT_MCP_SERVER  absolute path to lib/quant-mcp-server.mjs in this bundle
 #   QUANT_MCP_CWD     working directory for the server child process
@@ -17,20 +24,28 @@
       config:
         serverName: quant_data
         transport: stdio
-        command: !!js process.env.QUANT_MCP_NODE
+        # HARDENED: fall back to the Node that is running dsh itself when the
+        # override env var is unset. Portable + never null.
+        command: !!js process.env.QUANT_MCP_NODE || process.execPath
         # IMPORTANT: the list element MUST be UNQUOTED so cordis resolves the
         # !!js tag at load time. A single-quoted flow element ('!!js ...')
         # becomes a literal YAML string and the spawn fails with ENOENT,
-        # silently killing every reconnect attempt (10 strikes → tools gone).
+        # silently killing every reconnect attempts (10 strikes → tools gone).
+        # Fallback resolves this bundle's server script relative to `baseUrl`
+        # (the profile directory injected into the loader context): bundles
+        # live at <profile>/../node_modules/<bundle>/. This makes the patch a
+        # true drop-in on ANY machine without the override env vars set.
         args:
-          - !!js process.env.QUANT_MCP_SERVER
-        cwd: !!js process.env.QUANT_MCP_CWD
+          - !!js process.env.QUANT_MCP_SERVER || new URL('../node_modules/dsh-quant-data-mcp/lib/quant-mcp-server.mjs', baseUrl).pathname.replace(/^\//, '')
+        # Fallback working dir = this bundle's directory.
+        cwd: !!js process.env.QUANT_MCP_CWD || new URL('../node_modules/dsh-quant-data-mcp', baseUrl).pathname.replace(/^\//, '')
         env:
           NODE_OPTIONS: ''
           # forward the optional log path to the server child so it can log
           # (the dsh-mcp-client spawns the child with only this `env`, so any
-          # var the server needs must be listed here)
-          QUANT_MCP_LOG: !!js process.env.QUANT_MCP_LOG
+          # var the server needs must be listed here). Defaults to a log file
+          # beside this bundle.
+          QUANT_MCP_LOG: !!js process.env.QUANT_MCP_LOG || new URL('../node_modules/dsh-quant-data-mcp/dsh-quant-mcp.log', baseUrl).pathname.replace(/^\//, '')
         failOnStartupError: false
         reconnect:
           enabled: true
