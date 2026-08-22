@@ -3,6 +3,20 @@
   "version": "0.1.0",
   "description": "Zero-dependency MCP stdio server template with an out-of-the-box A-share (Chinese stock) data toolkit. Key-free, NDJSON protocol, drop-in dsh bundle.",
   "type": "module",
+  "main": "lib/quant-mcp-server.mjs",
+  "bin": {
+    "quant-mcp-server": "lib/quant-mcp-server.mjs"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "env.example.cmd"
+  ],
+  "scripts": {
+    "test": "node --test test/server.test.mjs"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
