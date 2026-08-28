@@ -1,16 +1,9 @@
-# Logs
+__pycache__/
+*.pyc
 *.log
-.DS_Store
-
-# Env / secrets (never commit)
-.env
-.env.*
-*.local.cmd
-*.local.ps1
-
-# Backups produced by setup.ps1 / dsh
-*.bak-*
-
-# Node (this bundle is zero-dependency; no install step)
-node_modules/
-npm-debug.log*
+_test*.mjs
+*_test.mjs
+test_*.mjs
+test_calls.jsonl
+test_out.jsonl
+probe*.log
